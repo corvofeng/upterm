@@ -206,10 +206,7 @@ func parseURL(str string) (u *url.URL, scheme string, host string, port string, 
 }
 
 func displaySession(session *api.GetSessionResponse) error {
-	user, err := api.EncodeIdentifierSession(session)
-	if err != nil {
-		return err
-	}
+	user := session.SessionId
 
 	u, scheme, host, port, err := parseURL(session.Host)
 	if err != nil {
@@ -230,7 +227,7 @@ func displaySession(session *api.GetSessionResponse) error {
 			sshCmd = fmt.Sprintf("%s -p %s", sshCmd, port)
 		}
 	} else {
-		sshCmd = fmt.Sprintf("ssh -o ProxyCommand='upterm proxy %s://%s@%s' %s@%s", scheme, user, hostPort, user, host+":"+port)
+		sshCmd = fmt.Sprintf("ssh -o ProxyCommand='upterm proxy %s://%s:nopass@%s' %s@%s", scheme, user, hostPort, user, host+":"+port)
 	}
 
 	data := [][]string{

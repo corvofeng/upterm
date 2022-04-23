@@ -230,6 +230,9 @@ func (s *Server) ServeWithContext(ctx context.Context, sshln net.Listener, wsln 
 	{
 		if sshln != nil {
 			cd := sidewayConnDialer{
+				baseDialer: baseDialer{
+					SessionRepo: sessRepo,
+				},
 				NodeAddr:            s.NodeAddr,
 				SSHDDialListener:    sshdDialListener,
 				SessionDialListener: sessionDialListener,
@@ -257,6 +260,9 @@ func (s *Server) ServeWithContext(ctx context.Context, sshln net.Listener, wsln 
 			var cd connDialer
 			if sshln == nil {
 				cd = sidewayConnDialer{
+					baseDialer: baseDialer{
+						SessionRepo: sessRepo,
+					},
 					NodeAddr:            s.NodeAddr,
 					SSHDDialListener:    sshdDialListener,
 					SessionDialListener: sessionDialListener,
@@ -269,6 +275,9 @@ func (s *Server) ServeWithContext(ctx context.Context, sshln net.Listener, wsln 
 				// This makes sure that SSHProxy terminates all SSH requests
 				// which provides a consistent authentication machanism.
 				cd = sshProxyDialer{
+					baseDialer: baseDialer{
+						SessionRepo: sessRepo,
+					},
 					sshProxyAddr: sshln.Addr().String(),
 					Logger:       s.Logger.WithField("com", "ws-sshproxy-dialer"),
 				}
@@ -310,8 +319,12 @@ func (s *Server) ServeWithContext(ctx context.Context, sshln net.Listener, wsln 
 type connDialer interface {
 	Dial(id *api.Identifier) (net.Conn, error)
 }
+type baseDialer struct {
+	SessionRepo *sessionRepo
+}
 
 type sshProxyDialer struct {
+	baseDialer
 	sshProxyAddr string
 	Logger       log.FieldLogger
 }
@@ -323,6 +336,11 @@ func (d sshProxyDialer) Dial(id *api.Identifier) (net.Conn, error) {
 		d.Logger.WithFields(log.Fields{"host": id.Id, "sshproxy-addr": d.sshProxyAddr}).Info("dialing sshproxy sshd")
 		return net.DialTimeout("tcp", d.sshProxyAddr, tcpDialTimeout)
 	}
+	sess, err := d.SessionRepo.Get(id.Id)
+	if err != nil {
+		return nil, fmt.Errorf("error find session with id %s: %w", id.Id, err)
+	}
+	id.NodeAddr = sess.NodeAddr
 
 	d.Logger.WithFields(log.Fields{"session": id.Id, "sshproxy-addr": d.sshProxyAddr, "addr": id.NodeAddr}).Info("dialing sshproxy session")
 	return net.DialTimeout("tcp", id.NodeAddr, tcpDialTimeout)
@@ -350,6 +368,7 @@ func (d wsConnDialer) Dial(id *api.Identifier) (net.Conn, error) {
 }
 
 type sidewayConnDialer struct {
+	baseDialer
 	NodeAddr            string
 	SSHDDialListener    SSHDDialListener
 	SessionDialListener SessionDialListener
@@ -362,6 +381,12 @@ func (cd sidewayConnDialer) Dial(id *api.Identifier) (net.Conn, error) {
 		cd.Logger.WithFields(log.Fields{"host": id.Id, "node": cd.NodeAddr}).Info("dialing sshd")
 		return cd.SSHDDialListener.Dial()
 	} else {
+		sess, err := cd.SessionRepo.Get(id.Id)
+		if err != nil {
+			return nil, fmt.Errorf("error find session with id %s: %w", id.Id, err)
+		}
+		id.NodeAddr = sess.NodeAddr
+
 		host, port, ee := net.SplitHostPort(id.NodeAddr)
 		if ee != nil {
 			return nil, fmt.Errorf("host address %s is malformed: %w", id.NodeAddr, ee)
