@@ -70,3 +70,7 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+
+publishers:
+  - name: s3cmd
+    cmd: s3cmd put {{ abs .ArtifactPath }} s3://{{ .Env.S3_BUCKET }}/dist/upterm/releases/download/{{.Version}}/{{ .Binary }}_{{ .Os }}_{{ .Arch }}
