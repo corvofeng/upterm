@@ -29,6 +29,7 @@ type Opt struct {
 	SSHAddr    string
 	WSAddr     string
 	NodeAddr   string
+	AdvisedUri string
 	KeyFiles   []string
 	Hostnames  []string
 	Network    string
@@ -134,6 +135,7 @@ func Start(opt Opt) error {
 
 		s := &Server{
 			NodeAddr:        nodeAddr,
+			AdvisedUri:      opt.AdvisedUri,
 			HostSigners:     hostSigners,
 			Signers:         signers,
 			NetworkProvider: network,
@@ -177,6 +179,7 @@ func parseNetworkOpt(opts []string) NetworkOptions {
 
 type Server struct {
 	NodeAddr        string
+	AdvisedUri      string
 	HostSigners     []ssh.Signer
 	Signers         []ssh.Signer
 	NetworkProvider NetworkProvider
@@ -303,6 +306,7 @@ func (s *Server) ServeWithContext(ctx context.Context, sshln net.Listener, wsln 
 			SessionRepo:         sessRepo,
 			HostSigners:         s.HostSigners, // TODO: use different host keys
 			NodeAddr:            s.NodeAddr,
+			AdvisedUri:          s.AdvisedUri,
 			SessionDialListener: sessionDialListener,
 			Logger:              s.Logger.WithField("com", "sshd"),
 		}
