@@ -164,6 +164,7 @@ type Host struct {
 	Stdin                  *os.File
 	Stdout                 *os.File
 	ReadOnly               bool
+	VSCode                 bool
 }
 
 func (c *Host) Run(ctx context.Context) error {
@@ -217,7 +218,7 @@ func (c *Host) Run(ctx context.Context) error {
 
 	session := &api.GetSessionResponse{
 		SessionId:      sessResp.SessionID,
-		Host:           u.String(),
+		Host:           sessResp.AdvisedUri,
 		NodeAddr:       sessResp.NodeAddr,
 		Command:        c.Command,
 		ForceCommand:   c.ForceCommand,
@@ -315,6 +316,7 @@ func (c *Host) Run(ctx context.Context) error {
 			Stdout:            c.Stdout,
 			Logger:            c.Logger.WithField("com", "server"),
 			ReadOnly:          c.ReadOnly,
+			VSCode:            c.VSCode,
 		}
 		g.Add(func() error {
 			return sshServer.ServeWithContext(ctx, rt.Listener())

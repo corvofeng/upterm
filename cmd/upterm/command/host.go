@@ -31,6 +31,8 @@ var (
 	flagSourceHutUsers     []string
 	flagReadOnly           bool
 	flagAccept             bool
+	flagVSCode             bool
+	flagVSCodeDir          string
 )
 
 func hostCmd() *cobra.Command {
@@ -67,17 +69,17 @@ private key. To authorize client connections, specify a authorized_key file with
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	cmd.PersistentFlags().StringVarP(&flagServer, "server", "", "ssh://uptermd.upterm.dev:22", "Specify the upterm server address (required). Supported protocols: ssh, ws, wss.")
-	cmd.PersistentFlags().StringVarP(&flagForceCommand, "force-command", "f", "", "Enforce a specified command for clients to join, and link the command's input/output to the client's terminal.")
-	cmd.PersistentFlags().StringSliceVarP(&flagPrivateKeys, "private-key", "i", defaultPrivateKeys(homeDir), "Specify private key files for public key authentication with the upterm server (required).")
-	cmd.PersistentFlags().StringVarP(&flagKnownHostsFilename, "known-hosts", "", defaultKnownHost(homeDir), "Specify a file containing known keys for remote hosts (required).")
-	cmd.PersistentFlags().StringVar(&flagAuthorizedKeys, "authorized-keys", "", "Specify a authorize_keys file listing authorized public keys for connection.")
-	cmd.PersistentFlags().StringSliceVar(&flagGitHubUsers, "github-user", nil, "Authorize specified GitHub users by allowing their public keys to connect. Configure GitHub CLI environment variables as needed; see https://cli.github.com/manual/gh_help_environment for details.")
-	cmd.PersistentFlags().StringSliceVar(&flagGitLabUsers, "gitlab-user", nil, "Authorize specified GitLab users by allowing their public keys to connect.")
-	cmd.PersistentFlags().StringSliceVar(&flagSourceHutUsers, "srht-user", nil, "Authorize specified SourceHut users by allowing their public keys to connect.")
-	cmd.PersistentFlags().BoolVar(&flagAccept, "accept", false, "Automatically accept client connections without prompts.")
-	cmd.PersistentFlags().BoolVarP(&flagReadOnly, "read-only", "r", false, "Host a read-only session, preventing client interaction.")
+	cmd.PersistentFlags().StringVarP(&flagServer, "server", "", "ssh://uptermd.upterm.dev:22", "upterm server address (required), supported protocols are ssh, ws, or wss.")
+	cmd.PersistentFlags().StringVarP(&flagForceCommand, "force-command", "f", "", "force execution of a command and attach its input/output to client's.")
+	cmd.PersistentFlags().StringSliceVarP(&flagPrivateKeys, "private-key", "i", defaultPrivateKeys(homeDir), "private key file for public key authentication against the upterm server")
+	cmd.PersistentFlags().StringVarP(&flagKnownHostsFilename, "known-hosts", "", defaultKnownHost(homeDir), "a file contains the known keys for remote hosts (required).")
+	cmd.PersistentFlags().StringVarP(&flagAuthorizedKeys, "authorized-key", "a", "", "an authorized_keys file that lists public keys that are permitted to connect.")
+	cmd.PersistentFlags().StringSliceVar(&flagGitHubUsers, "github-user", nil, "this GitHub user public keys are permitted to connect.")
+	cmd.PersistentFlags().StringSliceVar(&flagGitLabUsers, "gitlab-user", nil, "this GitLab user public keys are permitted to connect.")
+	cmd.PersistentFlags().StringSliceVar(&flagSourceHutUsers, "srht-user", nil, "this SourceHut user public keys are permitted to connect.")
+	cmd.PersistentFlags().BoolVar(&flagVSCode, "vscode", false, "allow vscode remote ssh connect")
+	cmd.PersistentFlags().StringVar(&flagVSCodeDir, "vscode-dir", "/", "vscode remote ssh connect directory")
+	cmd.PersistentFlags().BoolVarP(&flagReadOnly, "read-only", "r", false, "host a read-only session. Clients won't be able to interact.")
 
 	return cmd
 }
@@ -180,6 +182,18 @@ func shareRunE(c *cobra.Command, args []string) error {
 		authorizedKeys = append(authorizedKeys, sourceHutUserKeys...)
 	}
 
+	if !filepath.IsAbs(flagVSCodeDir) {
+		return fmt.Errorf("only support absolute path in vscode, but get: %s", flagVSCodeDir)
+	}
+
+	if _, err := os.Stat(flagVSCodeDir); err != nil {
+		return fmt.Errorf("error reading vscode dir: %w", err)
+	}
+
+	if flagVSCode && flagReadOnly {
+		return fmt.Errorf("can't mix --vscode with --read-only")
+	}
+
 	signers, cleanup, err := host.Signers(flagPrivateKeys)
 	if err != nil {
 		return fmt.Errorf("error reading private keys: %w", err)
@@ -208,6 +222,7 @@ func shareRunE(c *cobra.Command, args []string) error {
 		Stdout:                 os.Stdout,
 		Logger:                 logger,
 		ReadOnly:               flagReadOnly,
+		VSCode:                 flagVSCode,
 	}
 
 	return h.Run(context.Background())
