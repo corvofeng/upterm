@@ -14,16 +14,16 @@ builds:
     ldflags:
       - -s -w -X github.com/owenthereal/upterm/upterm.Version={{.Version}}
 
-  - env:
-      - CGO_ENABLED=0
-    goos:
-      - linux
-      - darwin
-    id: "uptermd"
-    binary: uptermd
-    main: ./cmd/uptermd
-    ldflags:
-      - -s -w -X github.com/owenthereal/upterm/upterm.Version={{.Version}}
+  # - env:
+  #     - CGO_ENABLED=0
+  #   goos:
+  #     - linux
+  #     - darwin
+  #   id: "uptermd"
+  #   binary: uptermd
+  #   main: ./cmd/uptermd
+  #   ldflags:
+  #     - -s -w -X github.com/owenthereal/upterm/upterm.Version={{.Version}}
 
 archives:
   # - format: tar.gz
@@ -70,3 +70,7 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+
+publishers:
+  - name: s3cmd
+    cmd: s3cmd put {{ abs .ArtifactPath }} s3://{{ .Env.BUCKET }}/dist/upterm/releases/download/{{.Version}}/{{ .Binary }}_{{ .Os }}_{{ .Arch }}
