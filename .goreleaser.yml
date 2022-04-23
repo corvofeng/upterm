@@ -19,6 +19,9 @@ archives:
       - LICENSE
       - README.md
       - docs/*
+  - format: binary
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+
 # brews:
 #   - tap:
 #       owner: owenthereal
