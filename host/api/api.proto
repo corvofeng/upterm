@@ -18,12 +18,14 @@ message GetSessionResponse {
   string node_addr = 5;
   repeated Client connected_clients = 6;
   repeated AuthorizedKey authorized_keys = 7;
+    string faq_msg = 8;
 }
 
 message AuthorizedKey {
   repeated string public_key_fingerprints = 1;
   string comment = 2;
 }
+ 
 
 message Client {
   string id = 1;
