@@ -3,6 +3,7 @@ package host
 import (
 	"bufio"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"net"
@@ -16,6 +17,7 @@ import (
 	"github.com/olebedev/emitter"
 	"github.com/owenthereal/upterm/host/api"
 	"github.com/owenthereal/upterm/host/internal"
+	"github.com/owenthereal/upterm/server"
 	"github.com/owenthereal/upterm/upterm"
 	"github.com/owenthereal/upterm/utils"
 	log "github.com/sirupsen/logrus"
@@ -165,7 +167,25 @@ type Host struct {
 	Stdout                 *os.File
 	ReadOnly               bool
 	VSCode                 bool
+	VSCodeWeb              bool
+	VSCodeWebFront         string
 	VerifyHostKey          bool
+}
+
+func (c *Host) GenerateVSCodeRedirectURL(sess *server.CreateSessionResponse, vw internal.VscodeWeb) string {
+	if vw.Port == 0 {
+		return ""
+	}
+	_, scheme, host, port, err := utils.ParseURL(sess.AdvisedUri)
+	if err != nil {
+		return fmt.Sprintf("can't parse advised uri: %s", err)
+	}
+	payload := fmt.Sprintf("%s://%s:@%s:%s?webPort=%d", scheme, sess.SessionID, host, port, vw.Port)
+	sEnc := base64.StdEncoding.EncodeToString([]byte(payload))
+	return fmt.Sprintf("%s/auth?payload=%s",
+		c.VSCodeWebFront,
+		sEnc,
+	)
 }
 
 func (c *Host) Run(ctx context.Context) error {
@@ -193,6 +213,15 @@ func (c *Host) Run(ctx context.Context) error {
 	if !c.VerifyHostKey { // ignore the host key verify
 		hostKeyCallback = func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			return nil
+		}
+	}
+	vw := internal.VscodeWeb{
+		VscodeWebFront: c.VSCodeWebFront,
+		Logger:         c.Logger.WithField("plugin", "vscode-web"),
+	}
+	if c.VSCodeWeb {
+		if err := vw.PrepareVSCodeWeb(); err != nil {
+			return err
 		}
 	}
 
@@ -225,6 +254,7 @@ func (c *Host) Run(ctx context.Context) error {
 	logger.Info("Established reverse tunnel")
 
 	session := &api.GetSessionResponse{
+<<<<<<< HEAD
 		SessionId:      sessResp.SessionID,
 		Host:           sessResp.AdvisedUri,
 		NodeAddr:       sessResp.NodeAddr,
@@ -232,6 +262,15 @@ func (c *Host) Run(ctx context.Context) error {
 		ForceCommand:   c.ForceCommand,
 		FaqMsg:         sessResp.FaqMsg,
 		AuthorizedKeys: toApiAuthorizedKeys(c.AuthorizedKeys),
+=======
+		SessionId:         sessResp.SessionID,
+		Host:              sessResp.AdvisedUri,
+		NodeAddr:          sessResp.NodeAddr,
+		Command:           c.Command,
+		ForceCommand:      c.ForceCommand,
+		FaqMsg:            sessResp.FaqMsg,
+		VscodeRedirectUrl: c.GenerateVSCodeRedirectURL(sessResp, vw),
+>>>>>>> b3e7022 (Add support for VSCodeWeb.)
 	}
 
 	if c.SessionCreatedCallback != nil {
@@ -258,6 +297,21 @@ func (c *Host) Run(ctx context.Context) error {
 			_ = s.Shutdown(ctx)
 			cancel()
 		})
+	}
+	{
+		if c.VSCodeWeb {
+			ctx, cancel := context.WithCancel(ctx)
+			g.Add(func() error {
+				err := vw.Run(ctx)
+				if err != nil && err.Error() == "signal: interrupt" { // normal stop
+					return nil
+				}
+				return err
+			}, func(err error) {
+				vw.Stop()
+				cancel()
+			})
+		}
 	}
 	{
 		g.Add(func() error {
@@ -326,6 +380,7 @@ func (c *Host) Run(ctx context.Context) error {
 			Logger:            c.Logger.WithField("com", "server"),
 			ReadOnly:          c.ReadOnly,
 			VSCode:            c.VSCode,
+			VSCodeWeb:         c.VSCodeWeb,
 		}
 		g.Add(func() error {
 			return sshServer.ServeWithContext(ctx, rt.Listener())

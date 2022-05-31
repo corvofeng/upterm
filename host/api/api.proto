@@ -18,7 +18,8 @@ message GetSessionResponse {
   string node_addr = 5;
   repeated Client connected_clients = 6;
   repeated AuthorizedKey authorized_keys = 7;
-    string faq_msg = 8;
+  string faq_msg = 8;
+  string vscode_redirect_url = 9;
 }
 
 message AuthorizedKey {

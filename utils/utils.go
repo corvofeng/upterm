@@ -5,6 +5,9 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
+	"net"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -151,4 +154,32 @@ func CompareVersion(version1 string, version2 string) int {
 		i, j = i+1, j+1
 	}
 	return 0
+}
+
+func ParseURL(str string) (u *url.URL, scheme string, host string, port string, err error) {
+	u, err = url.Parse(str)
+	if err != nil {
+		return
+	}
+
+	scheme = u.Scheme
+	host, port, err = net.SplitHostPort(u.Host)
+	if err != nil {
+		if !strings.Contains(err.Error(), "missing port in address") {
+			return
+		}
+
+		err = nil
+		host = u.Host
+		switch u.Scheme {
+		case "ssh":
+			port = "22"
+		case "ws":
+			port = "80"
+		case "wss":
+			port = "443"
+		}
+	}
+
+	return
 }
