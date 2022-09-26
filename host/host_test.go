@@ -17,7 +17,11 @@ const (
 )
 
 func Test_hostKeyCallbackKnowHostsFileNotExist(t *testing.T) {
-	dir := t.TempDir()
+	dir, err := os.MkdirTemp("", "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
 
 	knownHostsFile := filepath.Join(dir, "known_hosts")
 
@@ -48,8 +52,8 @@ func Test_hostKeyCallbackKnowHostsFileNotExist(t *testing.T) {
 }
 
 func Test_hostKeyCallback(t *testing.T) {
-	tempfile := filepath.Join(t.TempDir(), "known_hosts")
-	if err := os.WriteFile(tempfile, []byte("[127.0.0.1]:23 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKpVcpc3t5GZHQFlbSLyj6sQY4wWLjNZsLTkfo9Cdjit\n"), 0600); err != nil {
+	tmpfile, err := os.CreateTemp("", "known_hosts")
+	if err != nil {
 		t.Fatal(err)
 	}
 
