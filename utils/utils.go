@@ -127,6 +127,8 @@ func publicKey(pk ssh.PublicKey) ssh.PublicKey {
 	}
 
 	return pk
+}
+
 // If version1 < version2, return -1.
 // If version1 > version2, return 1.
 // Otherwise, return 0.
