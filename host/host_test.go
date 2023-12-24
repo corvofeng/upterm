@@ -52,10 +52,13 @@ func Test_hostKeyCallbackKnowHostsFileNotExist(t *testing.T) {
 }
 
 func Test_hostKeyCallback(t *testing.T) {
-	tmpfile, err := os.CreateTemp("", "known_hosts")
+	dir, err := os.MkdirTemp("", "test")
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer os.RemoveAll(dir)
+
+	knownHostsFile := filepath.Join(dir, "known_hosts")
 
 	stdin := bytes.NewBufferString("yes\n") // Simulate typing "yes" in stdin
 	stdout := bytes.NewBuffer(nil)
@@ -66,7 +69,7 @@ func Test_hostKeyCallback(t *testing.T) {
 	}
 	fp := utils.FingerprintSHA256(pk)
 
-	cb, err := NewPromptingHostKeyCallback(stdin, stdout, tempfile)
+	cb, err := NewPromptingHostKeyCallback(stdin, stdout, knownHostsFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,9 +77,9 @@ func Test_hostKeyCallback(t *testing.T) {
 	// 127.0.0.1:22 is not in known_hosts
 	addr := &net.TCPAddr{
 		IP:   net.IPv4(127, 0, 0, 1),
-		Port: 22,
+		Port: 19922,
 	}
-	if err := cb("127.0.0.1:22", addr, pk); err != nil {
+	if err := cb("127.0.0.1:19922", addr, pk); err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(stdout.String(), "ED25519 key fingerprint is "+fp) {
@@ -86,13 +89,13 @@ func Test_hostKeyCallback(t *testing.T) {
 	// 127.0.0.1:23 is in known_hosts
 	addr = &net.TCPAddr{
 		IP:   net.IPv4(127, 0, 0, 1),
-		Port: 23,
+		Port: 19922,
 	}
-	err = cb("127.0.0.1:23", addr, pk)
+	err = cb("127.0.0.1:19922", addr, pk)
 	if err == nil {
 		t.Fatalf("key mismatched error is expected")
 	}
-	if !strings.Contains(err.Error(), "Offending ED25519 key in "+tempfile) {
+	if !strings.Contains(err.Error(), "Offending ED25519 key in "+knownHostsFile) {
 		t.Fatalf("unexpected error message: %s", err.Error())
 	}
 }

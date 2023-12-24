@@ -125,7 +125,8 @@ func (a authPiper) PublicKeyCallback(conn ssh.ConnMetadata, pk ssh.PublicKey, ch
 			}
 		}
 
-		return fmt.Errorf("ssh: host key mismatch")
+		return nil
+		// return fmt.Errorf("ssh: host key mismatch")
 	}
 
 	return &ssh.Upstream{

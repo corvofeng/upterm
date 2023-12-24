@@ -119,6 +119,7 @@ func (s *Server) ServeWithContext(ctx context.Context, l net.Listener) error {
 		for _, signer := range s.Signers {
 			ss = append(ss, signer)
 		}
+		sh.logger.Info("Start ssh server")
 
 		server := gssh.Server{
 			HostSigners: ss,
