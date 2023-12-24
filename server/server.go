@@ -57,7 +57,7 @@ func Start(opt Opt) error {
 
 	privateKeys, err := utils.ReadFiles(opt.KeyFiles)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	if pp := os.Getenv("PRIVATE_KEY"); pp != "" {
@@ -89,6 +89,7 @@ func Start(opt Opt) error {
 	}
 
 	logger := l.WithFields(log.Fields{"app": "uptermd", "network": opt.Network, "network-opt": opt.NetworkOpt})
+	logger.Info("starting server")
 
 	var (
 		sshln net.Listener

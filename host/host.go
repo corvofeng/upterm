@@ -254,7 +254,6 @@ func (c *Host) Run(ctx context.Context) error {
 	logger.Info("Established reverse tunnel")
 
 	session := &api.GetSessionResponse{
-<<<<<<< HEAD
 		SessionId:      sessResp.SessionID,
 		Host:           sessResp.AdvisedUri,
 		NodeAddr:       sessResp.NodeAddr,
@@ -262,15 +261,6 @@ func (c *Host) Run(ctx context.Context) error {
 		ForceCommand:   c.ForceCommand,
 		FaqMsg:         sessResp.FaqMsg,
 		AuthorizedKeys: toApiAuthorizedKeys(c.AuthorizedKeys),
-=======
-		SessionId:         sessResp.SessionID,
-		Host:              sessResp.AdvisedUri,
-		NodeAddr:          sessResp.NodeAddr,
-		Command:           c.Command,
-		ForceCommand:      c.ForceCommand,
-		FaqMsg:            sessResp.FaqMsg,
-		VscodeRedirectUrl: c.GenerateVSCodeRedirectURL(sessResp, vw),
->>>>>>> b3e7022 (Add support for VSCodeWeb.)
 	}
 
 	if c.SessionCreatedCallback != nil {
