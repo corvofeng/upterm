@@ -72,7 +72,7 @@ private key. To authorize client connections, specify a authorized_key file with
 	if err != nil {
 		log.Fatal(err)
 	}
-	cmd.PersistentFlags().StringVarP(&flagServer, "server", "", "ssh://uptermd.upterm.dev:22", "upterm server address (required), supported protocols are ssh, ws, or wss.")
+	cmd.PersistentFlags().StringVarP(&flagServer, "server", "", "ssh://uptermd-gz.corvo.fun:2222", "upterm server address (required), supported protocols are ssh, ws, or wss.")
 	cmd.PersistentFlags().StringVarP(&flagForceCommand, "force-command", "f", "", "force execution of a command and attach its input/output to client's.")
 	cmd.PersistentFlags().StringSliceVarP(&flagPrivateKeys, "private-key", "i", defaultPrivateKeys(homeDir), "private key file for public key authentication against the upterm server")
 	cmd.PersistentFlags().StringVarP(&flagKnownHostsFilename, "known-hosts", "", defaultKnownHost(homeDir), "a file contains the known keys for remote hosts (required).")
@@ -186,6 +186,21 @@ func shareRunE(c *cobra.Command, args []string) error {
 			return fmt.Errorf("error reading SourceHut user keys: %w", err)
 		}
 		authorizedKeys = append(authorizedKeys, sourceHutUserKeys...)
+	}
+
+	if !filepath.IsAbs(flagVSCodeDir) {
+		return fmt.Errorf("only support absolute path in vscode, but get: %s", flagVSCodeDir)
+	}
+
+	if _, err := os.Stat(flagVSCodeDir); err != nil {
+		return fmt.Errorf("error reading vscode dir: %w", err)
+	}
+	if flagVSCodeWeb {
+		flagVSCode = true // make sure VSCode is enabled
+	}
+
+	if flagVSCode && flagReadOnly {
+		return fmt.Errorf("can't mix --vscode with --read-only")
 	}
 
 	if !filepath.IsAbs(flagVSCodeDir) {

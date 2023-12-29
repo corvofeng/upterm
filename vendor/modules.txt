@@ -4,9 +4,6 @@ github.com/VividCortex/gohistogram
 # github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be
 ## explicit; go 1.13
 github.com/anmitsu/go-shlex
-# github.com/apex/log v1.9.0
-## explicit; go 1.12
-github.com/apex/log
 # github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5
 ## explicit
 github.com/armon/go-socks5
@@ -16,14 +13,6 @@ github.com/aymanbagabas/go-osc52
 # github.com/beorn7/perks v1.0.1
 ## explicit; go 1.11
 github.com/beorn7/perks/quantile
-# github.com/bradfitz/iter v0.0.0-20191230175014-e8f45d346db8
-## explicit; go 1.11
-# github.com/buger/goterm v0.0.0-20200322175922-2f3e71b85129
-## explicit
-github.com/buger/goterm
-# github.com/c4milo/unpackit v0.0.0-20170704181138-4ed373e9ef1c
-## explicit
-github.com/c4milo/unpackit
 # github.com/cavaliergopher/grab/v3 v3.0.1
 ## explicit; go 1.14
 github.com/cavaliergopher/grab/v3
@@ -61,14 +50,6 @@ github.com/davecgh/go-spew/spew
 # github.com/dchest/uniuri v1.2.0
 ## explicit; go 1.19
 github.com/dchest/uniuri
-# github.com/dsnet/compress v0.0.1
-## explicit; go 1.9
-github.com/dsnet/compress
-github.com/dsnet/compress/bzip2
-github.com/dsnet/compress/bzip2/internal/sais
-github.com/dsnet/compress/internal
-github.com/dsnet/compress/internal/errors
-github.com/dsnet/compress/internal/prefix
 # github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
 ## explicit; go 1.18
 github.com/eiannone/keyboard
@@ -123,25 +104,12 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/go-github/v48 v48.2.0
-## explicit; go 1.17
-github.com/google/go-github/v48/github
-# github.com/google/go-querystring v1.1.0
-## explicit; go 1.10
-github.com/google/go-querystring/query
 # github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 ## explicit; go 1.13
 github.com/google/shlex
 # github.com/gorilla/websocket v1.5.1
 ## explicit; go 1.20
 github.com/gorilla/websocket
-# github.com/gosuri/uilive v0.0.4
-## explicit; go 1.10
-github.com/gosuri/uilive
-# github.com/gosuri/uiprogress v0.0.1
-## explicit
-github.com/gosuri/uiprogress
-github.com/gosuri/uiprogress/util/strutil
 # github.com/hashicorp/errwrap v1.0.0
 ## explicit
 github.com/hashicorp/errwrap
@@ -157,8 +125,6 @@ github.com/henvic/httpretty/internal/header
 ## explicit; go 1.13
 github.com/heroku/rollrus
 github.com/heroku/rollrus/internal/transport
-# github.com/hooklift/assert v0.1.0
-## explicit; go 1.14
 # github.com/inconshreveable/mousetrap v1.1.0
 ## explicit; go 1.18
 github.com/inconshreveable/mousetrap
@@ -179,15 +145,11 @@ github.com/jpillora/chisel/share/tunnel
 # github.com/jpillora/sizestr v1.0.0
 ## explicit; go 1.13
 github.com/jpillora/sizestr
-# github.com/klauspost/compress v1.14.4
-## explicit; go 1.15
-github.com/klauspost/compress/flate
-# github.com/klauspost/pgzip v1.2.5
-## explicit
-github.com/klauspost/pgzip
 # github.com/kr/fs v0.1.0
 ## explicit
 github.com/kr/fs
+# github.com/kr/text v0.1.0
+## explicit
 # github.com/lucasb-eyer/go-colorful v1.2.0
 ## explicit; go 1.12
 github.com/lucasb-eyer/go-colorful
@@ -218,9 +180,6 @@ github.com/olekukonko/tablewriter
 # github.com/pborman/ansi v1.0.0
 ## explicit
 github.com/pborman/ansi
-# github.com/pkg/errors v0.9.1
-## explicit
-github.com/pkg/errors
 # github.com/pkg/sftp v1.13.4
 ## explicit; go 1.15
 github.com/pkg/sftp
@@ -277,35 +236,15 @@ github.com/tadvi/systray
 # github.com/thlib/go-timezone-local v0.0.0-20210907160436-ef149e42d28e
 ## explicit; go 1.16
 github.com/thlib/go-timezone-local/tzlocal
-# github.com/tj/go v1.8.7
-## explicit; go 1.12
-github.com/tj/go/term
-# github.com/tj/go-update v2.2.5-0.20200519121640-62b4b798fd68+incompatible
-## explicit
-github.com/tj/go-update
-github.com/tj/go-update/progress
-# github.com/ulikunitz/xz v0.5.8
-## explicit; go 1.12
-github.com/ulikunitz/xz
-github.com/ulikunitz/xz/internal/hash
-github.com/ulikunitz/xz/internal/xlog
-github.com/ulikunitz/xz/lzma
 # golang.org/x/crypto v0.14.0 => github.com/tg123/sshpiper.crypto v0.13.0-20230910
 ## explicit; go 1.17
 golang.org/x/crypto/blowfish
-golang.org/x/crypto/cast5
 golang.org/x/crypto/chacha20
 golang.org/x/crypto/curve25519
 golang.org/x/crypto/curve25519/internal/field
 golang.org/x/crypto/ed25519
 golang.org/x/crypto/internal/alias
 golang.org/x/crypto/internal/poly1305
-golang.org/x/crypto/openpgp
-golang.org/x/crypto/openpgp/armor
-golang.org/x/crypto/openpgp/elgamal
-golang.org/x/crypto/openpgp/errors
-golang.org/x/crypto/openpgp/packet
-golang.org/x/crypto/openpgp/s2k
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/agent
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf

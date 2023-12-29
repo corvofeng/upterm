@@ -227,6 +227,7 @@ func displaySession(session *api.GetSessionResponse) error {
 		data = append(data, []string{"Host:", u.Scheme + "://" + hostPort})
 		data = append(data, []string{"SSH Session:", sshCmd})
 	}
+
 	isFirst := true
 	for _, c := range session.ConnectedClients {
 		var header string

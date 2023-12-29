@@ -8,28 +8,18 @@ go 1.20
 require (
 	github.com/VividCortex/gohistogram v1.0.0 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
-	github.com/apex/log v1.9.0 // indirect
-	github.com/bradfitz/iter v0.0.0-20191230175014-e8f45d346db8 // indirect
-	github.com/buger/goterm v0.0.0-20200322175922-2f3e71b85129 // indirect
-	github.com/c4milo/unpackit v0.0.0-20170704181138-4ed373e9ef1c // indirect
 	github.com/creack/pty v1.1.21
 	github.com/dchest/uniuri v1.2.0
-	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/gen2brain/beeep v0.0.0-20220909211152-5a9ec94374f6
 	github.com/gliderlabs/ssh v0.3.5
 	github.com/go-kit/kit v0.13.0
 	github.com/google/go-cmp v0.6.0
-	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/gorilla/websocket v1.5.1
-	github.com/gosuri/uilive v0.0.4 // indirect
-	github.com/gosuri/uiprogress v0.0.1 // indirect
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/heroku/rollrus v0.2.0
-	github.com/hooklift/assert v0.1.0 // indirect
 	github.com/influxdata/influxdb1-client v0.0.0-20200827194710-b269163b24ab // indirect
 	github.com/jpillora/chisel v1.9.1
-	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/oklog/run v1.1.1-0.20200508094559-c7096881717e
 	github.com/olebedev/emitter v0.0.0-20190110104742-e8d1457e6aee
@@ -39,9 +29,6 @@ require (
 	github.com/rs/xid v1.5.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.8.0
-	github.com/tj/go v1.8.7
-	github.com/tj/go-update v2.2.5-0.20200519121640-62b4b798fd68+incompatible
-	github.com/ulikunitz/xz v0.5.8 // indirect
 	golang.org/x/crypto v0.14.0
 	google.golang.org/grpc v1.60.0
 	google.golang.org/protobuf v1.31.0
@@ -51,7 +38,6 @@ require (
 	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/cli/go-gh/v2 v2.4.0
 	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
-	github.com/google/go-github/v48 v48.2.0
 	github.com/pkg/sftp v1.13.4
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20220407100705-7b9b53b0aca4
@@ -77,14 +63,13 @@ require (
 	github.com/henvic/httpretty v0.0.6 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jpillora/sizestr v1.0.0 // indirect
-	github.com/klauspost/compress v1.14.4 // indirect
 	github.com/kr/fs v0.1.0 // indirect
+	github.com/kr/text v0.1.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/muesli/termenv v0.13.0 // indirect
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.4.1-0.20230718164431-9a2bf3000d16 // indirect
 	github.com/prometheus/common v0.44.0 // indirect

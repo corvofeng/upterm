@@ -52,7 +52,11 @@ func Test_hostKeyCallbackKnowHostsFileNotExist(t *testing.T) {
 }
 
 func Test_hostKeyCallback(t *testing.T) {
+<<<<<<< HEAD
 	dir, err := os.MkdirTemp("", "test")
+=======
+	tmpfile, err := os.CreateTemp("", "known_hosts")
+>>>>>>> origin/master
 	if err != nil {
 		t.Fatal(err)
 	}

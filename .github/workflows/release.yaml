@@ -19,6 +19,7 @@ jobs:
           version: v1.21.2
           args: release --rm-dist
         env:
+<<<<<<< HEAD
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Docker push on master
         run: |
@@ -36,3 +37,12 @@ jobs:
       - run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+=======
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Docker push on master
+      #   run: |
+      #     # Build & publish on master
+      #     echo "${{ secrets.GH_TOKEN }}" | docker login ghcr.io -u USERNAME --password-stdin
+      #     TAG=${GITHUB_REF_NAME} make docker_push
+      #     TAG=latest make docker_push
+>>>>>>> origin/master
