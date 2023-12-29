@@ -236,7 +236,7 @@ github.com/tadvi/systray
 # github.com/thlib/go-timezone-local v0.0.0-20210907160436-ef149e42d28e
 ## explicit; go 1.16
 github.com/thlib/go-timezone-local/tzlocal
-# golang.org/x/crypto v0.14.0 => github.com/tg123/sshpiper.crypto v0.13.0-20230910
+# golang.org/x/crypto v0.17.0 => github.com/tg123/sshpiper.crypto v0.13.0-20230910
 ## explicit; go 1.17
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/chacha20

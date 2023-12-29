@@ -1,8 +1,6 @@
 package command
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 )
 
@@ -15,79 +13,79 @@ func upgradeCmd() *cobra.Command {
 
   # Upgrade to a specific version
   $ upterm upgrade 0.2.0`,
-		RunE: upgradeRunE,
+		// RunE: upgradeRunE,
 	}
 
 	return cmd
 }
 
-func upgradeRunE(c *cobra.Command, args []string) error {
-	// term.HideCursor()
-	// defer term.ShowCursor()
+// func upgradeRunE(c *cobra.Command, args []string) error {
+// term.HideCursor()
+// defer term.ShowCursor()
 
-	// m := &update.Manager{
-	// 	Command: "upterm",
-	// 	Store: &store{
-	// 		Owner:   "owenthereal",
-	// 		Repo:    "upterm",
-	// 		Version: upterm.Version,
-	// 	},
-	// }
+// m := &update.Manager{
+// 	Command: "upterm",
+// 	Store: &store{
+// 		Owner:   "owenthereal",
+// 		Repo:    "upterm",
+// 		Version: upterm.Version,
+// 	},
+// }
 
-	// var r release
-	// if len(args) > 0 {
-	// 	rr, err := m.GetRelease(trimVPrefix(args[0]))
-	// 	if err != nil {
-	// 		return fmt.Errorf("error fetching release: %s", err)
-	// 	}
+// var r release
+// if len(args) > 0 {
+// 	rr, err := m.GetRelease(trimVPrefix(args[0]))
+// 	if err != nil {
+// 		return fmt.Errorf("error fetching release: %s", err)
+// 	}
 
-	// 	r = release{rr}
-	// } else {
-	// 	// fetch the new releases
-	// 	releases, err := m.LatestReleases()
-	// 	if err != nil {
-	// 		log.Fatalf("error fetching releases: %s", err)
-	// 	}
+// 	r = release{rr}
+// } else {
+// 	// fetch the new releases
+// 	releases, err := m.LatestReleases()
+// 	if err != nil {
+// 		log.Fatalf("error fetching releases: %s", err)
+// 	}
 
-	// 	// no updates
-	// 	if len(releases) == 0 {
-	// 		return fmt.Errorf("no updates")
-	// 	}
+// 	// no updates
+// 	if len(releases) == 0 {
+// 		return fmt.Errorf("no updates")
+// 	}
 
-	// 	// latest release
-	// 	r = release{releases[0]}
-	// }
+// 	// latest release
+// 	r = release{releases[0]}
+// }
 
-	// if fmt.Sprintf("v%s", upterm.Version) == r.Version {
-	// 	fmt.Println("Upterm is up-to-date")
-	// 	return nil
-	// }
+// if fmt.Sprintf("v%s", upterm.Version) == r.Version {
+// 	fmt.Println("Upterm is up-to-date")
+// 	return nil
+// }
 
-	// // find the tarball for this system
-	// a := r.FindTarballWithVersion(runtime.GOOS, runtime.GOARCH)
-	// if a == nil {
-	// 	return fmt.Errorf("no binary for your system")
-	// }
+// // find the tarball for this system
+// a := r.FindTarballWithVersion(runtime.GOOS, runtime.GOARCH)
+// if a == nil {
+// 	return fmt.Errorf("no binary for your system")
+// }
 
-	// // download tarball to a tmp dir
-	// tarball, err := a.DownloadProxy(progress.Reader)
-	// if err != nil {
-	// 	return fmt.Errorf("error downloading: %s", err)
-	// }
+// // download tarball to a tmp dir
+// tarball, err := a.DownloadProxy(progress.Reader)
+// if err != nil {
+// 	return fmt.Errorf("error downloading: %s", err)
+// }
 
-	// // install it
-	// if err := m.Install(tarball); err != nil {
-	// 	return fmt.Errorf("error installing: %s", err)
-	// }
+// // install it
+// if err := m.Install(tarball); err != nil {
+// 	return fmt.Errorf("error installing: %s", err)
+// }
 
-	// fmt.Printf("Upgraded upterm %s to %s\n", upterm.Version, trimVPrefix(r.Version))
+// fmt.Printf("Upgraded upterm %s to %s\n", upterm.Version, trimVPrefix(r.Version))
 
-	return nil
-}
+// return nil
+// }
 
-func trimVPrefix(s string) string {
-	return strings.TrimPrefix(s, "v")
-}
+// func trimVPrefix(s string) string {
+// 	return strings.TrimPrefix(s, "v")
+// }
 
 // type release struct {
 // *update.Release
@@ -105,11 +103,11 @@ func trimVPrefix(s string) string {
 // return nil
 // }
 
-type store struct {
-	Owner   string
-	Repo    string
-	Version string
-}
+// type store struct {
+// 	Owner   string
+// 	Repo    string
+// 	Version string
+// }
 
 // func (s *store) GetRelease(version string) (*update.Release, error) {
 // 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

@@ -54,8 +54,9 @@ func (p *SSHRouting) Serve(ln net.Listener) error {
 	p.mux.Unlock()
 
 	piper := &ssh.PiperConfig{
-		PublicKeyCallback: p.AuthPiper.PublicKeyCallback,
-		ServerVersion:     upterm.ServerSSHServerVersion,
+		NoClientAuthCallback: p.AuthPiper.NoClientAuthCallBack,
+		PublicKeyCallback:    p.AuthPiper.PublicKeyCallback,
+		ServerVersion:        upterm.ServerSSHServerVersion,
 	}
 
 	for _, s := range p.HostSigners {

@@ -271,7 +271,6 @@ func displaySessionCallback(session *api.GetSessionResponse) error {
 	if err := displaySession(session); err != nil {
 		return err
 	}
-	return nil
 
 	if !flagAccept {
 		fmt.Printf("\nRun 'upterm session current' to display this screen again\n\n")

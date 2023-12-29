@@ -63,6 +63,26 @@ type authPiper struct {
 	HostSigners []ssh.Signer
 }
 
+func (a authPiper) NoClientAuthCallBack(conn ssh.ConnMetadata, challengeCtx ssh.ChallengeContext) (*ssh.Upstream, error) {
+
+	c, err := a.dialUpstream(conn)
+	if err != nil {
+		return nil, fmt.Errorf("error dialing upstream: %w", err)
+	}
+
+	hostKeyCb := func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+		return nil
+	}
+	return &ssh.Upstream{
+		Conn:    c,
+		Address: conn.RemoteAddr().String(),
+		ClientConfig: ssh.ClientConfig{
+			HostKeyCallback: hostKeyCb,
+		},
+	}, nil
+
+}
+
 func (a authPiper) PublicKeyCallback(conn ssh.ConnMetadata, pk ssh.PublicKey, challengeCtx ssh.ChallengeContext) (*ssh.Upstream, error) {
 	checker := UserCertChecker{
 		UserKeyFallback: func(user string, key ssh.PublicKey) (ssh.PublicKey, error) {
