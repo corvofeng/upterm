@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"math/rand"
 	"net"
 	"net/url"
 	"os"
@@ -158,7 +157,7 @@ type Host struct {
 	ForceCommand           []string
 	Signers                []ssh.Signer
 	HostKeyCallback        ssh.HostKeyCallback
-	AuthorizedKeys         []ssh.PublicKey
+	AuthorizedKeys         []*AuthorizedKey
 	AdminSocketFile        string
 	SessionCreatedCallback func(*api.GetSessionResponse) error
 	ClientJoinedCallback   func(*api.Client)
@@ -190,8 +189,6 @@ func (c *Host) GenerateVSCodeRedirectURL(sess *server.CreateSessionResponse, vw 
 }
 
 func (c *Host) Run(ctx context.Context) error {
-	rand.Seed(time.Now().UTC().UnixNano())
-
 	u, err := url.Parse(c.Host)
 	if err != nil {
 		return fmt.Errorf("error parsing host url: %s", err)
@@ -202,6 +199,11 @@ func (c *Host) Run(ctx context.Context) error {
 	}
 	if c.Stdout == nil {
 		c.Stdout = os.Stdout
+	}
+
+	var aks []ssh.PublicKey
+	for _, ak := range c.AuthorizedKeys {
+		aks = append(aks, ak.PublicKeys...)
 	}
 
 	logger := c.Logger.WithField("server", u)
@@ -227,7 +229,7 @@ func (c *Host) Run(ctx context.Context) error {
 		Host:              u,
 		Signers:           c.Signers,
 		HostKeyCallback:   hostKeyCallback,
-		AuthorizedKeys:    c.AuthorizedKeys,
+		AuthorizedKeys:    aks,
 		KeepAliveDuration: c.KeepAliveDuration,
 		Logger:            c.Logger.WithField("com", "reverse-tunnel"),
 	}
@@ -258,6 +260,7 @@ func (c *Host) Run(ctx context.Context) error {
 		Command:           c.Command,
 		ForceCommand:      c.ForceCommand,
 		FaqMsg:            sessResp.FaqMsg,
+		AuthorizedKeys:    toApiAuthorizedKeys(c.AuthorizedKeys),
 		VscodeRedirectUrl: c.GenerateVSCodeRedirectURL(sessResp, vw),
 	}
 
@@ -360,7 +363,7 @@ func (c *Host) Run(ctx context.Context) error {
 			CommandEnv:        []string{fmt.Sprintf("%s=%s", upterm.HostAdminSocketEnvVar, c.AdminSocketFile)},
 			ForceCommand:      c.ForceCommand,
 			Signers:           c.Signers,
-			AuthorizedKeys:    c.AuthorizedKeys,
+			AuthorizedKeys:    aks,
 			EventEmitter:      eventEmitter,
 			KeepAliveDuration: c.KeepAliveDuration,
 			Stdin:             c.Stdin,
@@ -401,4 +404,21 @@ func createFileIfNotExist(file string) error {
 	}
 
 	return nil
+}
+
+func toApiAuthorizedKeys(aks []*AuthorizedKey) []*api.AuthorizedKey {
+	var apiAks []*api.AuthorizedKey
+	for _, ak := range aks {
+		var fps []string
+		for _, pk := range ak.PublicKeys {
+			fps = append(fps, utils.FingerprintSHA256(pk))
+		}
+
+		apiAks = append(apiAks, &api.AuthorizedKey{
+			PublicKeyFingerprints: fps,
+			Comment:               ak.Comment,
+		})
+	}
+
+	return apiAks
 }

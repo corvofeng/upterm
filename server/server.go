@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"math/rand"
 	"net"
 	"net/url"
 	"os"
@@ -41,8 +40,6 @@ type Opt struct {
 }
 
 func Start(opt Opt) error {
-	rand.Seed(time.Now().UTC().UnixNano())
-
 	// must always have a ssh addr
 	if opt.SSHAddr == "" {
 		return fmt.Errorf("must specify a ssh address")
@@ -60,7 +57,7 @@ func Start(opt Opt) error {
 
 	privateKeys, err := utils.ReadFiles(opt.KeyFiles)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	if pp := os.Getenv("PRIVATE_KEY"); pp != "" {
@@ -72,6 +69,7 @@ func Start(opt Opt) error {
 		return err
 	}
 
+	// key signers + corresponding cert signers
 	hostSigners := slices.Clone(signers)
 	for _, s := range signers {
 		hs := HostCertSigner{
@@ -91,6 +89,7 @@ func Start(opt Opt) error {
 	}
 
 	logger := l.WithFields(log.Fields{"app": "uptermd", "network": opt.Network, "network-opt": opt.NetworkOpt})
+	logger.Info("starting server")
 
 	var (
 		sshln net.Listener

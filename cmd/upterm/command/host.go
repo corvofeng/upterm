@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/eiannone/keyboard"
 	"github.com/gen2brain/beeep"
 	"github.com/google/shlex"
 	"github.com/hashicorp/go-multierror"
@@ -17,7 +18,6 @@ import (
 	"github.com/owenthereal/upterm/utils"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"golang.org/x/crypto/ssh"
 )
 
 var (
@@ -28,7 +28,9 @@ var (
 	flagAuthorizedKeys     string
 	flagGitHubUsers        []string
 	flagGitLabUsers        []string
+	flagSourceHutUsers     []string
 	flagReadOnly           bool
+	flagAccept             bool
 	flagVSCode             bool
 	flagVSCodeWeb          bool
 	flagVSCodeWebFront     string
@@ -40,23 +42,27 @@ func hostCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "host",
 		Short: "Host a terminal session",
-		Long:  `Host a terminal session over a reverse SSH tunnel to the Upterm server with the IO of the host and the client attaching to the IO of a command. By default, the command authenticates against the Upterm server using the private key files located at ~/.ssh/id_dsa, ~/.ssh/id_ecdsa, ~/.ssh/id_ed25519, and ~/.ssh/id_rsa. If no private key file is found, the command reads private keys from SSH Agent. If no private key is found from files or SSH Agent, the command falls back to generate one on the fly. To permit authorized clients to join, client public keys can be specified with --authorized-key.`,
-		Example: `  # Host a terminal session that runs $SHELL with
-  # client's input/output attaching to the host's
+		Long: `Host a terminal session via a reverse SSH tunnel to the Upterm server, linking the IO of the host
+and client to a command's IO. Authentication against the Upterm server defaults to using private key files located
+at ~/.ssh/id_dsa, ~/.ssh/id_ecdsa, ~/.ssh/id_ed25519, and ~/.ssh/id_rsa. If no private key file is found, it resorts
+to reading private keys from the SSH Agent. Absence of private keys in files or SSH Agent generates an on-the-fly
+private key. To authorize client connections, specify a authorized_key file with public keys using --authorized-keys.`,
+		Example: `  # Host a terminal session running $SHELL, attaching client's IO to the host's:
   upterm host
 
-  # Host a terminal session that only allows specified public key(s) to connect
-  upterm host --authorized-key PATH_TO_PUBLIC_KEY
+  # Accept client connections automatically without prompts:
+  upterm host --accept
 
-  # Host a session with a custom command.
+  # Host a terminal session allowing only specified public key(s) to connect:
+  upterm host --authorized-keys PATH_TO_AUTHORIZED_KEY_FILE
+
+  # Host a session executing a custom command:
   upterm host -- docker run --rm -ti ubuntu bash
 
-  # Host a session that runs 'tmux new -t pair-programming' and
-  # force clients to join with 'tmux attach -t pair-programming'.
-  # This is similar to tmate.
+  # Host a 'tmux new -t pair-programming' session, forcing clients to join with 'tmux attach -t pair-programming':
   upterm host --force-command 'tmux attach -t pair-programming' -- tmux new -t pair-programming
 
-  # Use a different Uptermd server and host a session via WebSocket
+  # Use a different Uptermd server, hosting a session via WebSocket:
   upterm host --server wss://YOUR_UPTERMD_SERVER -- YOUR_COMMAND`,
 		PreRunE: validateShareRequiredFlags,
 		RunE:    shareRunE,
@@ -66,7 +72,6 @@ func hostCmd() *cobra.Command {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	cmd.PersistentFlags().StringVarP(&flagServer, "server", "", "ssh://uptermd-gz.corvo.fun:2222", "upterm server address (required), supported protocols are ssh, ws, or wss.")
 	cmd.PersistentFlags().StringVarP(&flagForceCommand, "force-command", "f", "", "force execution of a command and attach its input/output to client's.")
 	cmd.PersistentFlags().StringSliceVarP(&flagPrivateKeys, "private-key", "i", defaultPrivateKeys(homeDir), "private key file for public key authentication against the upterm server")
@@ -74,6 +79,7 @@ func hostCmd() *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&flagAuthorizedKeys, "authorized-key", "a", "", "an authorized_keys file that lists public keys that are permitted to connect.")
 	cmd.PersistentFlags().StringSliceVar(&flagGitHubUsers, "github-user", nil, "this GitHub user public keys are permitted to connect.")
 	cmd.PersistentFlags().StringSliceVar(&flagGitLabUsers, "gitlab-user", nil, "this GitLab user public keys are permitted to connect.")
+	cmd.PersistentFlags().StringSliceVar(&flagSourceHutUsers, "srht-user", nil, "this SourceHut user public keys are permitted to connect.")
 	cmd.PersistentFlags().BoolVar(&flagVSCode, "vscode", false, "allow vscode remote ssh connect")
 	cmd.PersistentFlags().BoolVar(&flagVSCodeWeb, "vscode-web", false, "allow host run vscode web server")
 	cmd.PersistentFlags().StringVar(&flagVSCodeWebFront, "vscode-web-front", "http://my.code-gz.corvo.fun", "vscode web server front host")
@@ -143,26 +149,58 @@ func shareRunE(c *cobra.Command, args []string) error {
 		}
 	}
 
-	var authorizedKeys []ssh.PublicKey
-	if flagAuthorizedKeys != "" {
-		authorizedKeys, err = host.AuthorizedKeys(flagAuthorizedKeys)
-	}
+	lf, err := utils.OpenHostLogFile()
 	if err != nil {
-		return fmt.Errorf("error reading authorized keys: %w", err)
+		return err
+	}
+	defer lf.Close()
+
+	logger := log.New()
+	logger.SetOutput(lf)
+
+	var authorizedKeys []*host.AuthorizedKey
+	if flagAuthorizedKeys != "" {
+		aks, err := host.AuthorizedKeysFromFile(flagAuthorizedKeys)
+		if err != nil {
+			return fmt.Errorf("error reading authorized keys: %w", err)
+		}
+		authorizedKeys = append(authorizedKeys, aks)
 	}
 	if flagGitHubUsers != nil {
-		gitHubUserKeys, err := host.GitHubUserKeys(flagGitHubUsers)
+		gitHubUserKeys, err := host.GitHubUserAuthorizedKeys(flagGitHubUsers, logger)
 		if err != nil {
 			return fmt.Errorf("error reading GitHub user keys: %w", err)
 		}
 		authorizedKeys = append(authorizedKeys, gitHubUserKeys...)
 	}
 	if flagGitLabUsers != nil {
-		gitLabUserKeys, err := host.GitLabUserKeys(flagGitLabUsers)
+		gitLabUserKeys, err := host.GitLabUserAuthorizedKeys(flagGitLabUsers)
 		if err != nil {
 			return fmt.Errorf("error reading GitLab user keys: %w", err)
 		}
 		authorizedKeys = append(authorizedKeys, gitLabUserKeys...)
+	}
+	if flagSourceHutUsers != nil {
+		sourceHutUserKeys, err := host.SourceHutUserAuthorizedKeys(flagSourceHutUsers)
+		if err != nil {
+			return fmt.Errorf("error reading SourceHut user keys: %w", err)
+		}
+		authorizedKeys = append(authorizedKeys, sourceHutUserKeys...)
+	}
+
+	if !filepath.IsAbs(flagVSCodeDir) {
+		return fmt.Errorf("only support absolute path in vscode, but get: %s", flagVSCodeDir)
+	}
+
+	if _, err := os.Stat(flagVSCodeDir); err != nil {
+		return fmt.Errorf("error reading vscode dir: %w", err)
+	}
+	if flagVSCodeWeb {
+		flagVSCode = true // make sure VSCode is enabled
+	}
+
+	if flagVSCode && flagReadOnly {
+		return fmt.Errorf("can't mix --vscode with --read-only")
 	}
 
 	if !filepath.IsAbs(flagVSCodeDir) {
@@ -192,15 +230,6 @@ func shareRunE(c *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	lf, err := utils.OpenHostLogFile()
-	if err != nil {
-		return err
-	}
-	defer lf.Close()
-
-	logger := log.New()
-	logger.SetOutput(lf)
 
 	h := &host.Host{
 		Host:                   flagServer,
@@ -241,6 +270,25 @@ func notifyBody(c *api.Client) string {
 func displaySessionCallback(session *api.GetSessionResponse) error {
 	if err := displaySession(session); err != nil {
 		return err
+	}
+
+	if !flagAccept {
+		fmt.Printf("\nRun 'upterm session current' to display this screen again\n\n")
+
+		if err := keyboard.Open(); err != nil {
+			return err
+		}
+		defer keyboard.Close()
+
+		fmt.Println("Press <q> or <ctrl-c> to accept connections...")
+		for {
+			char, key, err := keyboard.GetKey()
+			if err != nil {
+				return err
+			} else if key == keyboard.KeyCtrlC || char == 'q' {
+				break
+			}
+		}
 	}
 
 	return nil

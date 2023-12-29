@@ -21,8 +21,6 @@ import (
 
 const (
 	errCannotDecodeEncryptedPrivateKeys = "cannot decode encrypted private keys"
-	gitHubKeysUrlFmt                    = "https://github.com/%s"
-	gitLabKeysUrlFmt                    = "https://gitlab.com/%s"
 )
 
 type errDescryptingPrivateKey struct {

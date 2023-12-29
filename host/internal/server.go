@@ -45,7 +45,7 @@ type Server struct {
 }
 
 func (s *Server) ServeWithContext(ctx context.Context, l net.Listener) error {
-	writers := uio.NewMultiWriter()
+	writers := uio.NewMultiWriter(5)
 
 	cmdCtx, cmdCancel := context.WithCancel(ctx)
 	defer cmdCancel()
@@ -119,6 +119,7 @@ func (s *Server) ServeWithContext(ctx context.Context, l net.Listener) error {
 		for _, signer := range s.Signers {
 			ss = append(ss, signer)
 		}
+		sh.logger.Info("Start ssh server")
 
 		server := gssh.Server{
 			HostSigners: ss,
@@ -181,7 +182,7 @@ func (h *publicKeyHandler) HandlePublicKey(ctx gssh.Context, key gssh.PublicKey)
 	}
 
 	for _, k := range h.AuthorizedKeys {
-		if gssh.KeysEqual(k, pk) {
+		if utils.KeysEqual(k, pk) {
 			emitClientJoinEvent(h.EventEmmiter, ctx.SessionID(), auth, pk)
 			return true
 		}

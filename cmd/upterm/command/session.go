@@ -38,7 +38,7 @@ func list() *cobra.Command {
 		Aliases: []string{"ls", "l"},
 		Short:   "List shared sessions",
 		Long:    `List shared sessions. Session admin sockets are located in ~/.upterm.`,
-		Example: `  # List shared sessions
+		Example: `  # List shared sessions:
   upterm session list`,
 		RunE: listRunE,
 	}
@@ -50,9 +50,9 @@ func show() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "info",
 		Aliases: []string{"i"},
-		Short:   "Display session by name",
-		Long:    `Display session by name.`,
-		Example: `  # Display session by name
+		Short:   "Display terminal session by name",
+		Long:    `Display terminal session by name.`,
+		Example: `  # Display session by name:
   upterm session info NAME`,
 		RunE: infoRunE,
 	}
@@ -64,11 +64,14 @@ func current() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "current",
 		Aliases: []string{"c"},
-		Short:   "Display the current session",
-		Long:    `Display the current session. By default, the command fetches the current session from the admin socket path defined in the UPTERM_ADMIN_SOCKET environment variable. The UPTERM_ADMIN_SOCKET environment variable is set after a session is shared with 'upterm host'.`,
-		Example: `  # Display the current session defined in $UPTERM_ADMIN_SOCKET
+		Short:   "Display the current terminal session",
+		Long: `Display the current terminal session. By default, this command retrieves the current session from
+the admin socket path specified in the UPTERM_ADMIN_SOCKET environment variable. This environment variable is set upon
+sharing a session with 'upterm host'.`,
+		Example: `  # Display the active session as defined in $UPTERM_ADMIN_SOCKET:
   upterm session current
-  # Display the current session with a custom path
+
+  # Display the session with a custom admin socket path:
   upterm session current --admin-socket ADMIN_SOCKET_PATH`,
 		PreRunE: validateCurrentRequiredFlags,
 		RunE:    currentRunE,
@@ -197,7 +200,14 @@ func displaySession(session *api.GetSessionResponse) error {
 		sshCmd = fmt.Sprintf("ssh -o ProxyCommand='upterm proxy %s://%s:nopass@%s' %s@%s", scheme, user, hostPort, user, host+":"+port)
 	}
 
-	data := [][]string{}
+	data := [][]string{
+		{"Command:", strings.Join(session.Command, " ")},
+		{"Force Command:", naIfEmpty(strings.Join(session.ForceCommand, " "))},
+		{"Host:", u.Scheme + "://" + hostPort},
+		{"Authorized Keys:", naIfEmpty(displayAuthorizedKeys(session.AuthorizedKeys))},
+		{"SSH Session:", sshCmd},
+	}
+
 	if flagVSCode {
 		var vscodeURI string
 		if scheme == "ssh" { // currently only support ssh protocol
@@ -217,6 +227,7 @@ func displaySession(session *api.GetSessionResponse) error {
 		data = append(data, []string{"Host:", u.Scheme + "://" + hostPort})
 		data = append(data, []string{"SSH Session:", sshCmd})
 	}
+
 	isFirst := true
 	for _, c := range session.ConnectedClients {
 		var header string
@@ -278,6 +289,19 @@ func validateCurrentRequiredFlags(c *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func displayAuthorizedKeys(keys []*api.AuthorizedKey) string {
+	var aks []string
+	for _, ak := range keys {
+		var fps []string
+		for _, fp := range ak.PublicKeyFingerprints {
+			fps = append(fps, fmt.Sprintf("- %s", fp))
+		}
+		aks = append(aks, fmt.Sprintf("%s:\n%s", ak.Comment, strings.Join(fps, "\n")))
+	}
+
+	return strings.Join(aks, "\n")
 }
 
 func naIfEmpty(s string) string {

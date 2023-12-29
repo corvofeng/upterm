@@ -62,7 +62,8 @@ var (
 	HostPrivateKey   string
 	ClientPrivateKey string
 
-	ts TestServer
+	ts1 TestServer
+	ts2 TestServer
 )
 
 func TestMain(m *testing.M) {
@@ -72,21 +73,25 @@ func TestMain(m *testing.M) {
 	}
 	defer remove()
 
-	// start the single-node server
-	ts, err = NewServer(ServerPrivateKeyContent)
+	ts1, err = NewServer(ServerPrivateKeyContent)
+	if err != nil {
+		log.Fatal(err)
+	}
+	ts2, err = NewServer(ServerPrivateKeyContent)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	exitCode := m.Run()
 
-	ts.Shutdown()
+	ts1.Shutdown()
+	ts2.Shutdown()
 
 	os.Exit(exitCode)
 }
 
 func Test_ftest(t *testing.T) {
-	testCases := []func(t *testing.T, hostURL, nodeAddr string){
+	testCases := []func(t *testing.T, hostURL, hostNodeAddr, clientJoinURL string){
 		testHostNoAuthorizedKeyAnyClientJoin,
 		testClientAuthorizedKeyNotMatching,
 		testClientNonExistingSession,
@@ -101,14 +106,24 @@ func Test_ftest(t *testing.T) {
 	for _, test := range testCases {
 		testLocal := test
 
-		t.Run("ssh/"+funcName(testLocal), func(t *testing.T) {
+		t.Run("ssh/singleNode/"+funcName(testLocal), func(t *testing.T) {
 			t.Parallel()
-			testLocal(t, "ssh://"+ts.SSHAddr(), ts.NodeAddr())
+			testLocal(t, "ssh://"+ts1.SSHAddr(), ts1.NodeAddr(), "ssh://"+ts1.SSHAddr())
 		})
 
-		t.Run("ws/"+funcName(testLocal), func(t *testing.T) {
+		t.Run("ws/singleNode/"+funcName(testLocal), func(t *testing.T) {
 			t.Parallel()
-			testLocal(t, "ws://"+ts.WSAddr(), ts.NodeAddr())
+			testLocal(t, "ws://"+ts1.WSAddr(), ts1.NodeAddr(), "ws://"+ts1.WSAddr())
+		})
+
+		t.Run("ssh/multiNodes/"+funcName(testLocal), func(t *testing.T) {
+			t.Parallel()
+			testLocal(t, "ssh://"+ts1.SSHAddr(), ts1.NodeAddr(), "ssh://"+ts2.SSHAddr())
+		})
+
+		t.Run("ws/multiNodes/"+funcName(testLocal), func(t *testing.T) {
+			t.Parallel()
+			testLocal(t, "ws://"+ts1.WSAddr(), ts1.NodeAddr(), "ws://"+ts2.WSAddr())
 		})
 	}
 }
@@ -270,13 +285,13 @@ func (c *Host) Share(url string) error {
 	}
 
 	// permit client public key
-	var authorizedKeys []ssh.PublicKey
+	var authorizedKeys []*host.AuthorizedKey
 	if c.PermittedClientPublicKey != "" {
 		pk, _, _, _, err := ssh.ParseAuthorizedKey([]byte(c.PermittedClientPublicKey))
 		if err != nil {
 			return err
 		}
-		authorizedKeys = append(authorizedKeys, pk)
+		authorizedKeys = append(authorizedKeys, &host.AuthorizedKey{PublicKeys: []ssh.PublicKey{pk}})
 	}
 
 	if c.AdminSocketFile == "" {
@@ -384,7 +399,7 @@ func (c *Client) Close() {
 	c.sshClient.Close()
 }
 
-func (c *Client) JoinWithContext(ctx context.Context, session *api.GetSessionResponse, hostURL string) error {
+func (c *Client) JoinWithContext(ctx context.Context, session *api.GetSessionResponse, clientJoinURL string) error {
 	c.init()
 
 	auths, err := authMethodsFromFiles(c.PrivateKeys)
@@ -403,7 +418,7 @@ func (c *Client) JoinWithContext(ctx context.Context, session *api.GetSessionRes
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
-	u, err := url.Parse(hostURL)
+	u, err := url.Parse(clientJoinURL)
 	if err != nil {
 		return err
 	}
@@ -493,8 +508,8 @@ func (c *Client) JoinWithContext(ctx context.Context, session *api.GetSessionRes
 	return nil
 }
 
-func (c *Client) Join(session *api.GetSessionResponse, hostURL string) error {
-	return c.JoinWithContext(context.Background(), session, hostURL)
+func (c *Client) Join(session *api.GetSessionResponse, clientJoinURL string) error {
+	return c.JoinWithContext(context.Background(), session, clientJoinURL)
 }
 
 func scanner(ch chan string) *bufio.Scanner {
